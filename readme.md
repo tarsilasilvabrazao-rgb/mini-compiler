@@ -54,6 +54,7 @@ O mini compilador segue o seguinte fluxo de funcionamento:
 ```
 mini-compiler/
 │── src/
+|   ├── input/        # código fonte a ser lido 
 │   ├── lexer/        # Analisador Léxico
 │   ├── parser/       # Analisador Sintático
 │   ├── semantic/     # Analisador Semântico
@@ -87,7 +88,7 @@ print y;
 
 ## 🧪 Finalidade Académica
 
-Este mini compilador **não tem como objectivo competir com compiladores reais**, mas sim:
+Este mini compilador **tem como objectivo** :
 
 * Facilitar a compreensão dos conceitos teóricos
 * Demonstrar a aplicação prática dos módulos de um compilador
