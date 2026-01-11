@@ -9,6 +9,7 @@ class Lexer {
     private linha: number = 1;
     private coluna: number = 1;
     private filename: string;
+    public errors: string[] = [];
 
     constructor(text: string, filename: string = "unknown") {
         this.text = text;
@@ -36,6 +37,10 @@ class Lexer {
         this.coluna = 1;
     }
 
+    private addError(message: string) {
+        this.errors.push(message);
+    }
+
     /**
      * Analisa o texto e retorna o próximo token encontrado.
      */
@@ -61,7 +66,7 @@ class Lexer {
             const tokenInicioLinha = this.linha;
             const tokenInicioColuna = this.coluna;
 
-            // Mapeamento de caracteres indivuduais para seus respectivos tokens
+            // Mapeamento de caracteres individuais para seus respectivos tokens
             if (char === "+") {
                 this.advance();
                 return { type: TokenType.MAIS, value: "+", linha: tokenInicioLinha, coluna: tokenInicioColuna };
@@ -88,7 +93,7 @@ class Lexer {
 
             if (char === ".") {
                 this.advance();
-                return { type: TokenType.SEMICOLON, value: ";", linha: tokenInicioLinha, coluna: tokenInicioColuna };
+                return { type: TokenType.SEMICOLON, value: ".", linha: tokenInicioLinha, coluna: tokenInicioColuna };
             }
 
             if (char === ":") {
@@ -98,11 +103,11 @@ class Lexer {
 
             if (char === "(") {
                 this.advance();
-                return { type: TokenType.PARENTES_ESQUERDO, value: ":", linha: tokenInicioLinha, coluna: tokenInicioColuna };
+                return { type: TokenType.PARENTES_ESQUERDO, value: "(", linha: tokenInicioLinha, coluna: tokenInicioColuna };
             }
             if (char === ")") {
                 this.advance();
-                return { type: TokenType.PARENTES_DIREITO, value: ":", linha: tokenInicioLinha, coluna: tokenInicioColuna };
+                return { type: TokenType.PARENTES_DIREITO, value: ")", linha: tokenInicioLinha, coluna: tokenInicioColuna };
             }
 
             if (char === '"') {
@@ -124,7 +129,7 @@ class Lexer {
                     this.advance(); // Consome aspas finais
                     return { type: TokenType.TEXTO, value: str, linha: startLine, coluna: startColumn };
                 } else {
-                    throw new Error(
+                    this.addError(
                         `\x1b[31m========================================\x1b[0m
 \x1b[31m[ERRO] String não terminada\x1b[0m
 \x1b[31m========================================\x1b[0m
@@ -133,6 +138,7 @@ class Lexer {
   - \x1b[36mLinha:\x1b[0m \x1b[33m${startLine}\x1b[0m
   - \x1b[36mColuna:\x1b[0m \x1b[33m${startColumn}\x1b[0m`
                     );
+                    return { type: TokenType.TEXTO, value: str, linha: startLine, coluna: startColumn };
                 }
             }
 
@@ -144,7 +150,7 @@ class Lexer {
                 while (isNumber.test(this.peek()) || this.peek() === ",") {
                     if (this.peek() === ",") {
                         if (isReal) {
-                            throw new Error(
+                            this.addError(
                                 `\x1b[31m========================================\x1b[0m
 \x1b[31m[ERRO] Número real inválido\x1b[0m
 \x1b[31m========================================\x1b[0m
@@ -165,7 +171,7 @@ class Lexer {
                 }
 
                 if (num.endsWith(".")) {
-                    throw new Error(
+                    this.addError(
                         `\x1b[31m========================================\x1b[0m
 \x1b[31m[ERRO] Número real inválido\x1b[0m
 \x1b[31m========================================\x1b[0m
@@ -178,7 +184,7 @@ class Lexer {
                 }
 
                 if (/[a-zA-Z]/.test(this.peek())) {
-                    throw new Error(
+                    this.addError(
                         `\x1b[31m========================================\x1b[0m
 \x1b[31m[ERRO] Identificador inválido\x1b[0m
 \x1b[31m========================================\x1b[0m
@@ -219,7 +225,7 @@ class Lexer {
                 const keywords = ["VAR", "EXIBIR", "INTEIRO", "REAL", "NATURAL", "TEXTO"];
                 for (const kw of keywords) {
                     if (word.startsWith(kw)) {
-                        throw new Error(
+                        this.addError(
                             `\x1b[31m========================================\x1b[0m
 \x1b[31m[ERRO] Palavra reservada inválida\x1b[0m
 \x1b[31m========================================\x1b[0m
@@ -235,7 +241,7 @@ class Lexer {
                 // Se não for palavra-chave, é um identificador (nome de variável)
                 return { type: TokenType.IDENTIFICADOR, value: word, linha: tokenInicioLinha, coluna: tokenInicioColuna };
             }
-            throw new Error(
+            this.addError(
                 `\x1b[31m========================================\x1b[0m
 \x1b[31m[ERRO] Caractere inválido\x1b[0m
 \x1b[31m========================================\x1b[0m
@@ -245,6 +251,7 @@ class Lexer {
   - \x1b[36mColuna:\x1b[0m \x1b[33m${this.coluna}\x1b[0m
   - \x1b[36mCaractere:\x1b[0m '\x1b[33m${char}\x1b[0m'`
             );
+            this.advance(); // Recuperação
         }
 
         // Fim do arquivo atingido
