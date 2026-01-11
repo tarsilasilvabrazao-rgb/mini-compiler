@@ -221,7 +221,7 @@ class Lexer {
                 if (word === "NATURAL") return { type: TokenType.NATURAL, value: word, linha: tokenInicioLinha, coluna: tokenInicioColuna };
                 if (word === "TEXTO") return { type: TokenType.TEXTO, value: word, linha: tokenInicioLinha, coluna: tokenInicioColuna };
 
-                // Validação de palavras reservadas "sujas" (ex: VARc, REALx)
+                // Validação de palavras reservadas "erradas" (ex: VARc, REALx)
                 const keywords = ["VAR", "EXIBIR", "INTEIRO", "REAL", "NATURAL", "TEXTO"];
                 for (const kw of keywords) {
                     if (word.startsWith(kw)) {
