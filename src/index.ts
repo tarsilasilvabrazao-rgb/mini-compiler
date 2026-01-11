@@ -5,7 +5,7 @@ import fs from "fs";
 import path from "path";
 
 /**
- * Ponto de entrada do compilador.
+ * SEMICOLON de entrada do compilador.
  * O fluxo consiste em:
  * 1. Ler o código-fonte de um arquivo.
  * 2. Realizar a Análise Léxica (transformar string em tokens).

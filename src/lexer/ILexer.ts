@@ -1,27 +1,50 @@
-
 /**
  * Tipos de tokens suportados pela linguagem.
  */
 enum TokenType {
-    NUMBER = "NUMBER",       // Números inteiros
-    LET = "LET",             // Palavra-chave 'let'
-    PRINT = "PRINT",         // Palavra-chave 'print'
-    ASSIGN = "ASSIGN",       // Operador de atribuição '='
-    MINUS = "MINUS",         // Operador de subtração '-'
-    DIVIDED = "DIVIDED",     // Operador de divisão '/'
-    MULT = "MULT",           // Operador de multiplicação '*'
-    PLUS = "PLUS",           // Operador de adição '+'
-    SEMICOLON = "SEMICOLON", // Ponto e vírgula ';'
-    IDENTIFIER = "IDENTIFIER", // Identificadores (nomes de variáveis)
-    EOF = "EOF"              // Fim do arquivo (End Of File)
+  NUMBER = "NUMBER", // Números inteiros
+  VAR = "VAR", // Palavra-chave 'VAR'
+  EXIBIR = "EXIBIR", // Palavra-chave 'EXIBIR'
+  ATRIBUICAO = "ATRIBUICAO", // Operador de atribuição '='
+  MENOS = "MENOS", // Operador de subtração '-'
+  DIVISAO = "DIVISAO", // Operador de divisão '/'
+  MULTIPLICACAO = "MULTIPLICACAO", // Operador de MULTIPLICACAO '*'
+  MAIS = "MAIS", // Operador de adição '+'
+  IDENTIFICADOR = "IDENTIFICADOR", // Identificadores (nomes de variáveis)
+  EOF = "EOF", // Fim do arquivo (End Of File)
+
+  // Variáveis de tipo
+  INTEIRO = "INTEIRO", // Tipo de dado inteiro
+  NATURAL = "NATURAL", // Tipo de dado natural (não negativo)
+  REAL = "REAL", // Tipo de dado real (semicolon flutuante)
+  TEXTO = "TEXTO", // Tipo de dado texto (string)
+  CARACTER = "CARACTER", // Tipo de dado caracter (char)
+  BOOLEANO = "BOOLEANO", // Tipo de dado booleano (verdadeiro/falso)
+  LOGICO = "LOGICO", // Tipo de dado lógico (verdadeiro/falso)
+
+  // Delimitadores
+  PARENTES_ESESQUERDO = "PARENTES_ESESQUERDO", // Parênteses esquerdo '('
+  PARENTES_EDIREITO = "PARENTES_EDIREITO", // Parênteses direito ')'
+  COLCHETE_ESQUERDO = "COLCCOLCHETE_ESQUERDOHETESQUERDO", // Colchete esquerdo '['
+  COLCHETE_DIREITO = "COLCHETE_DIREITO", // Colchete direito ']'
+  CHAVE_ESQUERDO = "CHAVE_ESQUERDO", // Chave esquerda '{'
+  CHAVE_DIREITO = "CHAVE_DIREITO", // Chave direita '}'
+  VIRGULA = "VIRGULA", // Vírgula ','
+  DOIS_PONTOS = "DOIS_PONTOS", // Dois semicolons ':'
+  SEMICOLON = "SEMICOLON", // SEMICOLON '.'
+  PONTO_VIRGUAL = "PONTO_VIRGUAL", // SEMICOLON e vírgula ';'
+  MAIOR_QUE = "MAIOR_QUE", // Maior que '>'
+  MENOR_QUE = "MENOR_QUE", // Menor que '<'
+  IGUALDADE = "IGUALDADE", // Igualdade '=='
+  DIFERENTE = "DIFERENTE", // Diferente '!='
 }
 
 /**
  * Estrutura de um Token.
  */
 interface Token {
-    type: TokenType, // O tipo do token
-    value: string    // O valor textual do token
+  type: TokenType; // O tipo do token
+  value: string; // O valor textual do token
 }
 
-export { Token, TokenType }
+export { Token, TokenType };
