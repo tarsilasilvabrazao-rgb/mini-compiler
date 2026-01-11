@@ -141,7 +141,7 @@ class Parser {
     // Caso: print expression;
     if (this.currentToken.type === TokenType.EXIBIR) {
       this.eat(TokenType.EXIBIR);
-      this.eat(TokenType.PARENTES_ESESQUERDO);
+      this.eat(TokenType.PARENTES_ESQUERDO);
 
       const value = this.expr();
       this.eat(TokenType.PARENTES_DIREITO);

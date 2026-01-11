@@ -80,7 +80,7 @@ class Lexer {
 
       if (char === "(") {
         this.advance();
-        return { type: TokenType.PARENTES_ESESQUERDO, value: ":" };
+        return { type: TokenType.PARENTES_ESQUERDO, value: ":" };
       }
       if (char === ")") {
         this.advance();
