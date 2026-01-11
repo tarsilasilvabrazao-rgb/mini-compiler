@@ -89,20 +89,21 @@ class Lexer {
 
       // Capturar números inteiros ou reais(sequência de dígitos)
       if (isNumber.test(char)) {
-        var num = "";
-        var isReal = false;
+        let num = "";
+        let isReal = false;
 
         while (isNumber.test(this.peek()) || this.peek() === ",") {
           if (this.peek() === ",") {
-            if (isReal) {
-              throw new Error("Número real inválido");
-              // Já encontrou uma vírgula, não pode ter outra
-            }
+            if (isReal) throw new Error("Número real inválido");
             isReal = true;
+            num += "."; 
+            this.advance();
+            continue;
           }
           num += this.peek();
           this.advance();
         }
+
         return {
           type: isReal ? TokenType.REAL : TokenType.INTEIRO,
           value: num,
