@@ -72,14 +72,14 @@ A linguagem implementada no projecto suporta:
 - Declaração de variáveis
 - Atribuição de valores
 - Operações aritméticas simples
-- Comando de saída (`print`)
+- Comando de saída (`EXIBIR`)
 
 ### Exemplo de código:
 
 ```
-var x = 10;
-var y = x + 20;
-print y;
+VAR x = 3: INTEIRO.
+VAR y = x / 1: INTEIRO.
+EXIBIR y.
 ```
 
 ---
