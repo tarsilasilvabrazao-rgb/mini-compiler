@@ -6,7 +6,7 @@ EXIBIR(nome).
 
 VAR idade : INTEIRO.
 INSERIR("Qual a sua idade: ", idade).
-EXIBIR("Sua idade é: ",idade, " anos ",).
+EXIBIR("Sua idade é: ",idade, " anos ").
 
 
 VAR preco : REAL.

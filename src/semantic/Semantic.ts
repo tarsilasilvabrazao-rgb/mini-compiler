@@ -14,9 +14,37 @@ interface Symbol {
 class SemanticAnalyzer {
   private simbols: Record<string, Symbol> = {};
   private filename: string;
+  private printCallback: (message: string) => void;
+  private inputCallback: (prompt: string) => Promise<string>;
 
-  constructor(filename: string = "code.sa") {
+  constructor(
+    filename: string = "code.sa",
+    printCallback: (message: string) => void = console.log,
+    inputCallback?: (prompt: string) => Promise<string>
+  ) {
     this.filename = filename;
+    this.printCallback = printCallback;
+
+    if (inputCallback) {
+      this.inputCallback = inputCallback;
+    } else {
+      // Estratégia padrão para CLI (Terminal)
+      this.inputCallback = async (prompt: string) => {
+        if (process.platform === "win32") {
+          try {
+            process.stdout.write(prompt);
+            const command = `powershell -NoProfile -Command "[Console]::InputEncoding = [Console]::OutputEncoding = [System.Text.Encoding]::UTF8; [Console]::In.ReadLine()"`;
+            return execSync(command, {
+              encoding: "utf8",
+              stdio: ["inherit", "pipe", "inherit"],
+            }).trim();
+          } catch (e) {
+            return readlineSync.question(prompt);
+          }
+        }
+        return readlineSync.question(prompt);
+      };
+    }
   }
 
   /**
@@ -40,23 +68,23 @@ class SemanticAnalyzer {
   /**
    * Executa a lista de comandos representada pela AST.
    */
-  public execute(ast: ASTNode[]) {
+  public async execute(ast: ASTNode[]) {
     for (const node of ast) {
-      this.visit(node);
+      await this.visit(node);
     }
   }
 
   /**
    * Função recursiva que visita cada nó da AST e executa a lógica correspondente.
    */
-  private visit(node: ASTNode): any {
+  private async visit(node: ASTNode): Promise<any> {
     switch (node.type) {
       // Declaração de variável
       case "VariableDeclaration": {
         let value: any = null;
 
         if (node.value) {
-          value = this.visit(node.value);
+          value = await this.visit(node.value);
         }
 
         // Valores padrão
@@ -155,7 +183,7 @@ class SemanticAnalyzer {
           );
         }
 
-        const newValue = this.visit(node.value);
+        const newValue = await this.visit(node.value);
 
         // Validação de tipo
         switch (symbol.type) {
@@ -225,7 +253,7 @@ class SemanticAnalyzer {
         let output = "";
 
         for (const arg of node.arguments) {
-          const value = this.visit(arg);
+          const value = await this.visit(arg);
 
           if (
             typeof value !== "string" &&
@@ -249,7 +277,7 @@ class SemanticAnalyzer {
           }
         }
 
-        console.log(output);
+        this.printCallback(output);
         break;
       }
 
@@ -269,20 +297,7 @@ class SemanticAnalyzer {
         const msg = node.promptMessage ?? "";
 
         let input = "";
-        if (process.platform === "win32") {
-          try {
-            process.stdout.write(msg + " ");
-            const command = `powershell -NoProfile -Command "[Console]::InputEncoding = [Console]::OutputEncoding = [System.Text.Encoding]::UTF8; [Console]::In.ReadLine()"`;
-            input = execSync(command, {
-              encoding: "utf8",
-              stdio: ["inherit", "pipe", "inherit"],
-            }).trim();
-          } catch (e) {
-            input = readlineSync.question(msg + " ", { encoding: "utf-8" });
-          }
-        } else {
-          input = readlineSync.question(msg + " ", { encoding: "utf-8" });
-        }
+        input = await this.inputCallback(msg + " ");
 
         switch (symbol.type) {
           case "INTEIRO": {
@@ -350,10 +365,10 @@ class SemanticAnalyzer {
         let iterations = 0;
         const MAX_ITERATIONS = 10000;
 
-        while (this.visit(node.condition)) {
+        while (await this.visit(node.condition)) {
           // body sempre é um array no seu parser, então não precisa do else
           for (const stmt of node.body) {
-            this.visit(stmt);
+            await this.visit(stmt);
           }
 
           iterations++;
@@ -364,14 +379,16 @@ class SemanticAnalyzer {
       }
 
       case "ForStatement": {
-        const cond = this.visit(node.condition);
+        const cond = await this.visit(node.condition);
         let iterations = 0;
         const MAX_ITERATIONS = 10000;
-        this.visit(node.init);
+        await this.visit(node.init);
         iterations = 0;
-        while (this.visit(node.condition)) {
-          node.body.forEach((stmt: ASTNode) => this.visit(stmt));
-          this.visit(node.increment);
+        while (await this.visit(node.condition)) {
+          for (const stmt of node.body) {
+            await this.visit(stmt);
+          }
+          await this.visit(node.increment);
           iterations++;
           if (iterations > MAX_ITERATIONS)
             throw new Error("Loop PARA excedeu 10000 iterações.");
@@ -383,11 +400,13 @@ class SemanticAnalyzer {
         let iterations = 0;
         const MAX_ITERATIONS = 10000;
         do {
-          node.body.forEach((stmt: ASTNode) => this.visit(stmt));
+          for (const stmt of node.body) {
+            await this.visit(stmt);
+          }
           iterations++;
           if (iterations > MAX_ITERATIONS)
             throw new Error("Loop FACA...ENQUANTO excedeu 10000 iterações.");
-        } while (this.visit(node.condition));
+        } while (await this.visit(node.condition));
         break;
       }
 
@@ -397,7 +416,7 @@ class SemanticAnalyzer {
 
       // Expressao unária
       case "UnaryExpression":
-        const val = this.visit(node.argument);
+        const val = await this.visit(node.argument);
         switch (node.operator) {
           case "-":
             return -val;
@@ -418,7 +437,7 @@ class SemanticAnalyzer {
       //
 
       case "IfStatement": {
-        const cond = this.visit(node.condition);
+        const cond = await this.visit(node.condition);
 
         if (typeof cond !== "boolean") {
           throw new Error(
@@ -432,14 +451,18 @@ class SemanticAnalyzer {
 
         if (cond) {
           // SE verdadeiro
-          node.trueBranch.forEach((stmt: ASTNode) => this.visit(stmt));
+          for (const stmt of node.trueBranch) {
+            await this.visit(stmt);
+          }
         } else if (node.falseBranch) {
           // Se Falso
           if (Array.isArray(node.falseBranch)) {
-            node.falseBranch.forEach((stmt: ASTNode) => this.visit(stmt));
+            for (const stmt of node.falseBranch) {
+              await this.visit(stmt);
+            }
           } else {
             // recursivamente visita o IfStatement (SENAO SE)
-            this.visit(node.falseBranch as ASTNode);
+            await this.visit(node.falseBranch as ASTNode);
           }
         }
 
@@ -447,8 +470,8 @@ class SemanticAnalyzer {
       }
 
       case "LogicalExpression":
-        const l = this.visit(node.left);
-        const r = this.visit(node.right);
+        const l = await this.visit(node.left);
+        const r = await this.visit(node.right);
 
         switch (node.operator) {
           case "==":
@@ -485,8 +508,8 @@ class SemanticAnalyzer {
 
       // Expressão binária
       case "BinaryExpression":
-        const left = this.visit(node.left);
-        const right = this.visit(node.right);
+        const left = await this.visit(node.left);
+        const right = await this.visit(node.right);
 
         // Validação de tipos: ambos devem ser números
         if (typeof left !== "number" || typeof right !== "number") {

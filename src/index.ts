@@ -37,7 +37,7 @@ const inputDir = isPkg
   : path.join(__dirname, "input");
 var continuar = true
 
-function executarMenu() {
+async function executarMenu() {
   const files = fs.readdirSync(inputDir).filter(file => file.endsWith(".sa"));
 
   if (files.length === 0) {
@@ -69,7 +69,7 @@ function executarMenu() {
   if (index >= 0 && index < files.length) {
     const selectedFile = files[index];
     if (selectedFile) {
-      executeFile(selectedFile);
+      await executeFile(selectedFile);
       console.log("\x1b[36m-----------------------------------------------\x1b[0m");
       readlineSync.question("Pressione \x1b[1mEnter\x1b[0m para voltar ao menu...");
     }
@@ -79,7 +79,7 @@ function executarMenu() {
   }
 }
 
-function executeFile(filename: string) {
+async function executeFile(filename: string) {
   const filePath = path.join(inputDir, filename);
   const code = fs.readFileSync(filePath, "utf-8");
 
@@ -106,7 +106,7 @@ function executeFile(filename: string) {
 
     // 3. Analisador Semântico e Execução
     const semantic = new SemanticAnalyzer(filename);
-    semantic.execute(ast);
+    await semantic.execute(ast);
 
     console.log(`\n\x1b[32mExecução de ${filename} finalizada com sucesso.\x1b[0m`);
   } catch (error: any) {
