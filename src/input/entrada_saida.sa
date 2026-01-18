@@ -2,13 +2,12 @@
 
 VAR nome : TEXTO.
 INSERIR("Digite o seu nome:", nome).
-EXIBIR("Bem-vindo,").
-EXIBIR(nome).
+EXIBIR("Bem-vindo:",nome).
 
 VAR idade : INTEIRO.
 INSERIR("Qual a sua idade?", idade).
-EXIBIR("Sua idade é:").
-EXIBIR(idade).
+#EXIBIR("Sua idade é:",idade).
+
 
 VAR preco : REAL.
 INSERIR("Digite um preço (use vírgula):", preco).

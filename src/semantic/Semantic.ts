@@ -221,14 +221,36 @@ class SemanticAnalyzer {
       }
 
       // Comando print para saida de
-      case "PrintStatement":
-        const printVal = this.visit(node.value);
-        if (typeof printVal === "number" && !Number.isInteger(printVal)) {
-          console.log(printVal.toString().replace(".", ","));
-        } else {
-          console.log(printVal);
+      case "PrintStatement": {
+        let output = "";
+
+        // Caso exista texto
+        if (node.promptMessage !== null) {
+          output += node.promptMessage;
         }
+
+        // Caso exista identificador
+        if (node.value !== null) {
+          const value = this.visit({
+            type: "IDENTIFICADOR",
+            name: node.value,
+            linha: node.linha ?? 0,
+            coluna: node.coluna ?? 0,
+          });
+
+          // Se houver texto antes, adiciona separação
+          if (output.length > 0) output += " ";
+
+          if (typeof value === "number" && !Number.isInteger(value)) {
+            output += value.toString().replace(".", ",");
+          } else {
+            output += value;
+          }
+        }
+
+        console.log(output);
         break;
+      }
 
       case "InputStatement": {
         const symbol = this.simbols[node.id];
@@ -250,7 +272,10 @@ class SemanticAnalyzer {
           try {
             process.stdout.write(msg + " ");
             const command = `powershell -NoProfile -Command "[Console]::InputEncoding = [Console]::OutputEncoding = [System.Text.Encoding]::UTF8; [Console]::In.ReadLine()"`;
-            input = execSync(command, { encoding: "utf8", stdio: ["inherit", "pipe", "inherit"] }).trim();
+            input = execSync(command, {
+              encoding: "utf8",
+              stdio: ["inherit", "pipe", "inherit"],
+            }).trim();
           } catch (e) {
             input = readlineSync.question(msg + " ", { encoding: "utf-8" });
           }
