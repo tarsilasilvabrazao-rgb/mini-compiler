@@ -1,5 +1,6 @@
 import ASTNode from "../parser/IParser";
 import readlineSync from "readline-sync";
+import { execSync } from "child_process";
 
 interface Symbol {
   value: number | string | boolean;
@@ -238,7 +239,19 @@ class SemanticAnalyzer {
         }
 
         const msg = node.promptMessage ?? "";
-        const input = readlineSync.question(msg + " ");
+
+        let input = "";
+        if (process.platform === "win32") {
+          try {
+            process.stdout.write(msg + " ");
+            const command = `powershell -NoProfile -Command "[Console]::InputEncoding = [Console]::OutputEncoding = [System.Text.Encoding]::UTF8; [Console]::In.ReadLine()"`;
+            input = execSync(command, { encoding: "utf8", stdio: ["inherit", "pipe", "inherit"] }).trim();
+          } catch (e) {
+            input = readlineSync.question(msg + " ", { encoding: "utf-8" });
+          }
+        } else {
+          input = readlineSync.question(msg + " ", { encoding: "utf-8" });
+        }
 
         switch (symbol.type) {
           case "INTEIRO": {
