@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="pt">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pamdu-Ali | IDE</title>
+    <link rel="stylesheet" href="index.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <header class="main-header">
+        <div class="logo-area">
+            <h1>Pamdu-Ali</h1>
+            <span class="badge">v1.0.0</span>
+        </div>
+        <p>Compilador da linguagem <code>SeteAO.sa</code></p>
+    </header>
+
+    <main class="editor-container">
+        <section class="panel editor-panel">
+            <div class="panel-header">
+                <span class="status-dot"></span>
+                Editor de Código
+            </div>
+
+            <div class="editor-wrapper">
+                <pre id="highlighting" aria-hidden="true"><code id="highlighting-content"></code></pre>
+
+                <textarea id="codigo" spellcheck="false" oninput="updateHighlight(this.value)"
+                    onscroll="syncScroll(this)">VAR nome = "Pamdu-Ali" : TEXTO
+EXIBIR(nome)</textarea>
+            </div>
+
+            <div class="actions">
+                <button id="compilar" class="btn-primary">
+                    <span class="icon">▶</span> Executar Código
+                </button>
+            </div>
+        </section>
+
+        <section class="panel output-panel">
+            <div class="panel-header">Console</div>
+            <div class="terminal">
+                <pre id="saida">// O resultado da compilação aparecerá aqui...</pre>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal de Entrada -->
+    <!-- Input no terminal agora é gerado via JS -->
+
+    <script src="renderer.js"></script>
+</body>
+
+</html>

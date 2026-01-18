@@ -126,39 +126,52 @@ window.onload = () => {
 
 
     // --- Lógica do Modal de Input ---
-    const modal = document.getElementById("input-modal");
-    const inputField = document.getElementById("input-field");
-    const btnConfirm = document.getElementById("btn-confirm-input");
-    const promptTitle = document.getElementById("input-prompt");
+    // --- Lógica de Input no Console (Terminal-like) ---
 
-    const submitInput = () => {
-        const value = inputField.value;
-        if (window.api && window.api.sendInput) {
-            window.api.sendInput(value);
-            inputField.value = "";
-            modal.classList.add("hidden");
-            modal.style.display = "none";
-        }
-    };
-
-    if (btnConfirm) {
-        btnConfirm.addEventListener("click", submitInput);
-    }
-
-    if (inputField) {
-        inputField.addEventListener("keydown", (e) => {
-            if (e.key === "Enter") submitInput();
-        });
-    }
 
     if (window.api && window.api.onInputRequest) {
-        window.api.onInputRequest((prompt) => {
-            if (promptTitle) promptTitle.innerText = prompt || "Entrada de Dados";
-            if (modal) {
-                modal.classList.remove("hidden");
-                modal.style.display = "flex";
-                if (inputField) inputField.focus();
-            }
+        window.api.onInputRequest((promptMsg) => {
+            promptMsg = promptMsg || "";
+
+            // Cria container para a linha de input
+            const inputLine = document.createElement("div");
+            inputLine.className = "terminal-input-container";
+
+            // Prompt (ex: "Digite seu nome: ")
+            const promptSpan = document.createElement("span");
+            promptSpan.className = "terminal-prompt";
+            promptSpan.textContent = promptMsg.trim() ? `? ${promptMsg}` : "? ";
+
+            // Campo de Input
+            const inputEl = document.createElement("input");
+            inputEl.type = "text";
+            inputEl.className = "terminal-input";
+            inputEl.autocomplete = "off";
+
+            inputLine.appendChild(promptSpan);
+            inputLine.appendChild(inputEl);
+            saidaDiv.appendChild(inputLine);
+
+            // Scroll para o final e foca
+            saidaDiv.scrollTop = saidaDiv.scrollHeight;
+            inputEl.focus();
+
+            // Resolve input ao dar Enter
+            const handleEnter = (e) => {
+                if (e.key === "Enter") {
+                    const value = inputEl.value;
+
+                    // Remove o campo editável e deixa o texto estático (simula terminal)
+                    inputEl.removeEventListener("keydown", handleEnter);
+                    inputEl.disabled = true;
+
+                    if (window.api && window.api.sendInput) {
+                        window.api.sendInput(value);
+                    }
+                }
+            };
+
+            inputEl.addEventListener("keydown", handleEnter);
         });
     }
 };
