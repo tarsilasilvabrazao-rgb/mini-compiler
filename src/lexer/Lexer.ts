@@ -75,7 +75,7 @@ class Lexer {
       // Definição de padrões (espaços, números, varras)
       const isBlankSpace = /\s/;
       const isNumber = /[0-9]/;
-      const isWord = /[a-zA-Z]/;
+      const isWord = /[a-zA-Z0-9_]/;
 
       // Ignorar espaços em branco
       if (isBlankSpace.test(char)) {
@@ -116,19 +116,19 @@ class Lexer {
       if (char === "#") {
         // Verifica se é um comentário de bloco ## ... ##
         if (this.peekNext() === "#") {
-          const commentStartLine = this.linha;
-          const commentStartColumn = this.coluna;
+          const comentarioInicioDaLinha = this.linha;
+          const comentarioInicioDaColuna = this.coluna;
 
           this.advance(); // Consome o primeiro '#'
           this.advance(); // Consome o segundo '#'
 
-          let closed = false;
+          let fechado = false;
           // Procura pelo fechamento ##
           while (this.position < this.text.length) {
             if (this.peek() === "#" && this.peekNext() === "#") {
               this.advance(); // Consome o primeiro '#'
               this.advance(); // Consome o segundo '#'
-              closed = true;
+              fechado = true;
               break; // Sai do loop de comentário
             }
 
@@ -140,16 +140,16 @@ class Lexer {
           }
 
           // Se chegou aqui e o comentário não foi fechado (EOF), adiciona erro
-          if (!closed) {
+          if (!fechado) {
             this.addError(
               `\x1b[31m========================================\x1b[0m
 \x1b[31m[ERRO] Comentário em bloco não fechado\x1b[0m
 \x1b[31m========================================\x1b[0m
 \x1b[1mDetalhes:\x1b[0m
   - \x1b[36mArquivo:\x1b[0m \x1b[33m${this.filename}\x1b[0m
-  - \x1b[36mLinha:\x1b[0m \x1b[33m${commentStartLine}\x1b[0m
-  - \x1b[36mColuna:\x1b[0m \x1b[33m${commentStartColumn}\x1b[0m
-  - \x1b[36mContexto:\x1b[0m Comentário iniciado com ## mas não terminado com ##`,
+  - \x1b[36mLinha:\x1b[0m \x1b[33m${comentarioInicioDaLinha}\x1b[0m
+  - \x1b[36mColuna:\x1b[0m \x1b[33m${comentarioInicioDaColuna}\x1b[0m
+  - \x1b[36mContexto:\x1b[0m Comentário iniciado com ##, mas não terminado com ##`,
             );
           }
           continue; // Ignora o comentário e busca o próximo token
@@ -333,25 +333,25 @@ class Lexer {
       if (char === '"') {
         this.advance(); // Consome aspas iniciais
         let str = "";
-        const startLine = this.linha;
-        const startColumn = this.coluna;
-        const MAX_STRING_LENGTH = 500; // Limite de caracteres para strings
+        const iniciarLinha = this.linha;
+        const iniciarColuna = this.coluna;
+        const TAMANHO_MAXIMO_PARA_STRING = 500; // Limite de caracteres para strings
 
         while (this.peek() !== '"' && this.position < this.text.length) {
           if (this.peek() === "\n") {
             this.avancaLinha();
           } else {
             // Validação: string muito grande
-            if (str.length >= MAX_STRING_LENGTH) {
+            if (str.length >= TAMANHO_MAXIMO_PARA_STRING) {
               this.addError(
                 `\x1b[31m========================================\x1b[0m
 \x1b[31m[ERRO] String muito grande\x1b[0m
 \x1b[31m========================================\x1b[0m
 \x1b[1mDetalhes:\x1b[0m
   - \x1b[36mArquivo:\x1b[0m \x1b[33m${this.filename}\x1b[0m
-  - \x1b[36mLinha:\x1b[0m \x1b[33m${startLine}\x1b[0m
-  - \x1b[36mColuna:\x1b[0m \x1b[33m${startColumn}\x1b[0m
-  - \x1b[36mContexto:\x1b[0m A string excede o limite de ${MAX_STRING_LENGTH} caracteres.`,
+  - \x1b[36mLinha:\x1b[0m \x1b[33m${iniciarLinha}\x1b[0m
+  - \x1b[36mColuna:\x1b[0m \x1b[33m${iniciarColuna}\x1b[0m
+  - \x1b[36mContexto:\x1b[0m A string excede o limite de ${TAMANHO_MAXIMO_PARA_STRING} caracteres.`,
               );
               // Consome o restante da string até as aspas finais ou EOF
               while (this.peek() !== '"' && this.position < this.text.length) {
@@ -374,8 +374,8 @@ class Lexer {
           return {
             type: TokenType.TEXTO,
             value: str,
-            linha: startLine,
-            coluna: startColumn,
+            linha: iniciarLinha,
+            coluna: iniciarColuna,
           };
         } else {
           this.addError(
@@ -384,14 +384,14 @@ class Lexer {
 \x1b[31m========================================\x1b[0m
 \x1b[1mDetalhes:\x1b[0m
   - \x1b[36mArquivo:\x1b[0m \x1b[33m${this.filename}\x1b[0m
-  - \x1b[36mLinha:\x1b[0m \x1b[33m${startLine}\x1b[0m
-  - \x1b[36mColuna:\x1b[0m \x1b[33m${startColumn}\x1b[0m`,
+  - \x1b[36mLinha:\x1b[0m \x1b[33m${iniciarLinha}\x1b[0m
+  - \x1b[36mColuna:\x1b[0m \x1b[33m${iniciarColuna}\x1b[0m`,
           );
           return {
             type: TokenType.TEXTO,
             value: str,
-            linha: startLine,
-            coluna: startColumn,
+            linha: iniciarLinha,
+            coluna: iniciarColuna,
           };
         }
       }
@@ -401,7 +401,7 @@ class Lexer {
         let num = "";
         let isReal = false;
         const MAX_NUMBER_LENGTH = 15; // Limite de dígitos para números
-        const startLine = tokenInicioLinha;
+        const iniciarLinha = tokenInicioLinha;
         const startCol = tokenInicioColuna;
 
         while (isNumber.test(this.peek()) || this.peek() === ",") {
@@ -432,7 +432,7 @@ class Lexer {
 \x1b[31m========================================\x1b[0m
 \x1b[1mDetalhes:\x1b[0m
   - \x1b[36mArquivo:\x1b[0m \x1b[33m${this.filename}\x1b[0m
-  - \x1b[36mLinha:\x1b[0m \x1b[33m${startLine}\x1b[0m
+  - \x1b[36mLinha:\x1b[0m \x1b[33m${iniciarLinha}\x1b[0m
   - \x1b[36mColuna:\x1b[0m \x1b[33m${startCol}\x1b[0m
   - \x1b[36mContexto:\x1b[0m O número '\x1b[33m${num}\x1b[0m' excede o limite de ${MAX_NUMBER_LENGTH} dígitos.`,
             );
@@ -474,7 +474,7 @@ class Lexer {
         return {
           type: isReal ? TokenType.REAL : TokenType.INTEIRO,
           value: num,
-          linha: startLine,
+          linha: iniciarLinha,
           coluna: startCol,
         };
       }

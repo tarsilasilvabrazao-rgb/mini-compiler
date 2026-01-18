@@ -37,7 +37,7 @@ const inputDir = isPkg
   : path.join(__dirname, "input");
 var continuar = true
 
-function runMenu() {
+function executarMenu() {
   const files = fs.readdirSync(inputDir).filter(file => file.endsWith(".sa"));
 
   if (files.length === 0) {
@@ -116,5 +116,5 @@ function executeFile(filename: string) {
 
 do {
   console.clear(); // Limpa a tela antes de mostrar o menu
-  runMenu();
+  executarMenu();
 } while (continuar)
