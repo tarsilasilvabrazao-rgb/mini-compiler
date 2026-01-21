@@ -14,3 +14,5 @@ const ast = parser.parse();
 
 const semantic = new SemanticAnalyzer();
 semantic.execute(ast);
+
+
