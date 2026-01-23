@@ -13,9 +13,12 @@ PARA(i = 0; i < 10; i = i + 1) {
         PARAR.
     }
 
-    EXIBIR("i =", i, "aqui").
+    EXIBIR("i =", i, " aqui").
 }
 
 EXIBIR("Fim do programa").
 
 
+PARA(VAR i=0:INTEIRO; i>n; i++){
+EXIBIR("Ola",i).
+} 

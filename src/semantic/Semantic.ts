@@ -1,12 +1,31 @@
 import ASTNode from "../parser/IParser";
 import readlineSync from "readline-sync";
 import { execSync } from "child_process";
+import { error } from "console";
 
 interface Symbol {
+  name: string,
   value: number | string | boolean;
   type: "INTEIRO" | "REAL" | "NATURAL" | "TEXTO" | "LOGICO";
 }
 
+
+class Scope{
+    private symbols = new Map<string, Symbol> ();
+    add(symbol: Symbol): void{
+        if(this.symbols.has(symbol.name)){
+            throw new Error(`'${symbol.name}' a variável já foi declarada neste escopo`);
+        }
+        this.symbols.set(symbol.name, symbol);
+    }
+    lookup(name: string):Symbol | undefined{
+        return this.symbols.get(name);
+    }
+    //Remover escopo ao sair
+    remove(name: string): boolean{
+        return this.symbols.delete(name);
+    }
+}
 /**
  * O SemanticAnalyzer percorre a AST para validar semântica e executar os comandos.
  * Ele mantém uma tabela de símbolos para armazenar valores e tipos das variáveis.
@@ -14,12 +33,67 @@ interface Symbol {
 
 class BreakSignal {}
 class ContinueSignal {}
+class errorSemantic extends Error{
+      constructor(
+        public typeError: string,
+        public details: string,
+        public node: ASTNode
+      ) {
+        super(details);
+      }
+    }
 
 class SemanticAnalyzer {
-  private simbols: Record<string, Symbol> = {};
+  // private simbols: Record<string, Symbol> = {};
   private filename: string;
   private printCallback: (message: string) => void;
   private inputCallback: (prompt: string) => Promise<string>;
+
+  private stackScopes: Scope[] = [];
+  private classeRecente?: string;
+  private recenteParentClasse?: string;
+  private symbolDeclared = new Set<string>();
+
+  private currentScope(): Scope{
+      if(this.stackScopes.length === 0){
+        throw new Error('Erro: pilha de escopos vazia.')
+      }
+      return this.stackScopes[this.stackScopes.length - 1]!;
+
+    }
+
+    //Entrar em um novo escopo
+    private enterScope(){
+        this.stackScopes.push(new Scope());
+    }
+    //Sair do escopo actual
+    private outScope(){
+        this.stackScopes.pop();
+    }
+
+    // private symbolExistOutScope(name:string): boolean{
+    //   return this.stackScopes.some(scope => scope.lookup(name) !== undefined);
+    // }
+    private symbolExistOutScope(name: string): boolean{
+      for(let i = this.stackScopes.length - 2; i >=0; i--){
+        if(this.stackScopes[i]!.lookup(name)){
+          return true;
+        }
+      }
+      return false;
+    }
+    
+    private lookupSymbol(name: string, node: ASTNode): Symbol{
+        for(let i = this.stackScopes.length - 1; i >= 0; i--){
+          const symbol = this.stackScopes[i]!.lookup(name);
+            if(symbol) return symbol; 
+          }
+          if(this.symbolDeclared.has(name)){
+            throw new errorSemantic("A váriavel está fora do escopo!", `A váriavel '${name}' foi declarada, mas não é global e sim local.`,node);
+          }
+        throw new errorSemantic("A variável não foi declarada!",`A variável '${name}' não foi declarada.`,node);
+    }
+    
 
   constructor(
     filename: string = "code.sa",
@@ -73,8 +147,21 @@ class SemanticAnalyzer {
    * Executa a lista de comandos representada pela AST.
    */
   public async execute(ast: ASTNode[]) {
-    for (const node of ast) {
+    this.enterScope();
+    try{
+      for (const node of ast) {
       await this.visit(node);
+    } 
+    }catch(er){
+      if(er instanceof errorSemantic){
+        console.error(
+          this.formatError(er.typeError, er.details, er.node)
+        );
+      } else{
+        throw er;
+      }
+    } finally{
+      this.outScope();
     }
   }
 
@@ -166,17 +253,21 @@ class SemanticAnalyzer {
             break;
         }
 
-        this.simbols[node.id] = {
-          value,
-          type: node.varType,
-        };
+        // this.simbols[node.id] = {
+        //   value,
+        //   type: node.varType,
+        // };
+        this.currentScope().add({
+          name: node.id, value, type: node.varType,
+        });
 
+        this.symbolDeclared.add(node.id);
         break;
       }
 
       // Atribuição de valor a variável
       case "Assignment": {
-        const symbol = this.simbols[node.id];
+        const symbol = this.lookupSymbol(node.id, node);
 
         if (!symbol) {
           throw new Error(
@@ -288,7 +379,7 @@ class SemanticAnalyzer {
 
       // Comando EXIBIR para entrada de dados
       case "InputStatement": {
-        const symbol = this.simbols[node.id];
+        const symbol = this.lookupSymbol(node.id, node);
 
         if (!symbol) {
           throw new Error(
@@ -372,6 +463,7 @@ class SemanticAnalyzer {
         const MAX_ITERATIONS = 10000;
 
         while (await this.visit(node.condition)) {
+          this.enterScope();
           let shouldContinue = false;
 
           try {
@@ -387,7 +479,10 @@ class SemanticAnalyzer {
               shouldContinue = true;
             } else {
               throw signal;
-            }
+            } 
+          } 
+          finally{
+            this.outScope();
           }
 
           iterations++;
@@ -407,15 +502,19 @@ class SemanticAnalyzer {
         let iterations = 0;
         const MAX_ITERATIONS = 10000;
 
+        this.enterScope();
+
         // Inicialização
         await this.visit(node.init);
+        try{
 
         while (true) {
           // Condição
           const cond = await this.visit(node.condition);
           if (!cond) break;
+          this.enterScope(); 
 
-          let shouldContinue = false;
+          // let shouldContinue = false;
 
           try {
             for (const stmt of node.body) {
@@ -427,10 +526,13 @@ class SemanticAnalyzer {
             }
 
             if (signal instanceof ContinueSignal) {
-              shouldContinue = true;
+              // shouldContinue = true;
             } else {
               throw signal;
             }
+          }
+          finally{
+            this.outScope();
           }
 
           // Incremento (SEMPRE EXECUTA)
@@ -441,9 +543,12 @@ class SemanticAnalyzer {
             throw new Error("Loop PARA excedeu 10000 iterações.");
           }
 
-          if (shouldContinue) {
-            continue;
-          }
+          // if (shouldContinue) {
+          //   continue;
+          // }
+        }
+        } finally{
+          this.outScope();
         }
 
         break;
@@ -454,6 +559,7 @@ class SemanticAnalyzer {
         const MAX_ITERATIONS = 10000;
 
         do {
+          this.enterScope();
           let shouldContinue = false;
 
           try {
@@ -470,6 +576,8 @@ class SemanticAnalyzer {
             } else {
               throw signal;
             }
+          } finally{
+            this.outScope();
           }
 
           iterations++;
@@ -570,22 +678,44 @@ class SemanticAnalyzer {
           );
         }
 
+        // if (cond) {
+        //   // SE verdadeiro
+        //   for (const stmt of node.trueBranch) {
+        //     await this.visit(stmt);
+        //   }
+        // } else if (node.falseBranch) {
+        //   // Se Falso
+        //   if (Array.isArray(node.falseBranch)) {
+        //     for (const stmt of node.falseBranch) {
+        //       await this.visit(stmt);
+        //     }
+        //   } else {
+        //     // recursivamente visita o IfStatement (SENAO SE)
+        //     await this.visit(node.falseBranch as ASTNode);
+        //   }
+        // }
         if (cond) {
-          // SE verdadeiro
-          for (const stmt of node.trueBranch) {
-            await this.visit(stmt);
-          }
-        } else if (node.falseBranch) {
-          // Se Falso
-          if (Array.isArray(node.falseBranch)) {
-            for (const stmt of node.falseBranch) {
-              await this.visit(stmt);
-            }
-          } else {
-            // recursivamente visita o IfStatement (SENAO SE)
-            await this.visit(node.falseBranch as ASTNode);
-          }
-        }
+    this.enterScope();          // inicia o escopo local
+
+    for(const stmt of node.trueBranch){
+      await this.visit(stmt);
+    } 
+
+    this.outScope();            //fecha o escopo
+  } 
+  else if (node.falseBranch) {
+    this.enterScope();
+
+    if (Array.isArray(node.falseBranch)) {
+      for(const stmt of node.falseBranch){
+      await this.visit(stmt);
+    } 
+    } else {
+      await this.visit(node.falseBranch);
+    }
+
+    this.outScope();
+  }
 
         break;
       }
@@ -615,7 +745,7 @@ class SemanticAnalyzer {
 
       // Identificador
       case "IDENTIFICADOR":
-        const symbol = this.simbols[node.name];
+        const symbol = this.lookupSymbol(node.name, node);
         if (!symbol) {
           throw new Error(
             this.formatError(

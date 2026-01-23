@@ -711,6 +711,9 @@ class Lexer {
           "PARA",
           "CONTINUAR",
           "PARAR",
+          "PUBLICO",
+          "PRIVADO",
+          "PROTEJIDO"
         ];
         for (const kw of keywords) {
           if (word.startsWith(kw) && word !== kw) {

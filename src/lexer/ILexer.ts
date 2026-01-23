@@ -79,6 +79,11 @@ enum TokenType {
   // Comandos de controle de fluxo
   CONTINUAR = "CONTINUAR", // Palavra-chave 'CONTINUAR'
   PARAR = "PARAR", // Palavra-chave 'PARAR'
+
+  //POO
+  PUBLICO = "PUBLICO",
+  PRIVADO = "PRIVADO",
+  PROTEJIDO =  "PROTEJIDO",
 }
 
 
