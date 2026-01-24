@@ -101,11 +101,11 @@ class Lexer {
         };
       }
 
-      // Operador de divisão
+      // Operador de barra
       if (char === "/") {
         this.advance();
         return {
-          type: TokenType.DIVISAO,
+          type: TokenType.BARRA,
           value: "/",
           linha: tokenInicioLinha,
           coluna: tokenInicioColuna,

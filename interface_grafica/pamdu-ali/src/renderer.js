@@ -267,6 +267,14 @@ window.onload = () => {
                 if ((!resultado.errors || resultado.errors.length === 0) && (!resultado.output || resultado.output.length === 0)) {
                     saidaDiv.innerHTML += '<div class="log-info">✅ Executado sem saída visual.</div>';
                 }
+                const webPreview = document.getElementById("web-preview");
+                if (webPreview) {
+                    if (resultado.html) {
+                        webPreview.innerHTML = resultado.html;
+                    } else {
+                        webPreview.innerHTML = '<!-- Sem saída web -->';
+                    }
+                }
 
             } else {
                 saidaDiv.textContent = "Erro: API não disponível.";
@@ -275,7 +283,60 @@ window.onload = () => {
     }
 
 
-    // --- Lógica do Modal de Input ---
+    // --- Lógica de Gestão de Layout ---
+
+    const container = document.querySelector(".editor-container");
+    const layoutToggle = document.getElementById("layout-toggle");
+    const toggleConsole = document.getElementById("toggle-console");
+    const toggleWeb = document.getElementById("toggle-web");
+
+    const terminalPanel = document.querySelector(".output-panel");
+    const webPanel = document.querySelector(".web-panel");
+
+    if (container) {
+        container.classList.add("layout-horizontal"); // Default
+    }
+
+    if (toggleConsole) toggleConsole.classList.add("active");
+    if (toggleWeb) toggleWeb.classList.add("active");
+
+    if (layoutToggle) {
+        layoutToggle.addEventListener("click", () => {
+            const isHorizontal = container.classList.contains("layout-horizontal");
+            if (isHorizontal) {
+                container.classList.remove("layout-horizontal");
+                container.classList.add("layout-vertical");
+                layoutToggle.classList.add("active");
+                layoutToggle.title = "Mudar para Layout Horizontal";
+            } else {
+                container.classList.remove("layout-vertical");
+                container.classList.add("layout-horizontal");
+                layoutToggle.classList.remove("active");
+                layoutToggle.title = "Mudar para Layout Vertical";
+            }
+        });
+    }
+
+    const setupPanelToggle = (btn, panel, titleShow, titleHide) => {
+        if (!btn || !panel) return;
+        btn.addEventListener("click", () => {
+            const isHidden = panel.classList.contains("hidden");
+            if (isHidden) {
+                panel.classList.remove("hidden");
+                btn.classList.add("active");
+                btn.title = titleHide;
+            } else {
+                panel.classList.add("hidden");
+                btn.classList.remove("active");
+                btn.title = titleShow;
+            }
+        });
+    };
+
+    setupPanelToggle(toggleConsole, terminalPanel, "Mostrar Console", "Ocultar Console");
+    setupPanelToggle(toggleWeb, webPanel, "Mostrar Visualização Web", "Ocultar Visualização Web");
+
+
     // --- Lógica de Input no Console (Terminal-like) ---
 
 

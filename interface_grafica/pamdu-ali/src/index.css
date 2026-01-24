@@ -74,18 +74,41 @@ body {
 
 /* Layout Principal */
 .editor-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
     flex-grow: 1;
     overflow: hidden;
+    gap: 1px;
+    background-color: var(--border-color);
+    transition: flex-direction 0.3s ease;
+}
+
+.editor-container.layout-vertical {
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.editor-container.layout-vertical .panel {
+    flex: none;
+    min-height: 400px;
+}
+
+.editor-container.layout-horizontal {
+    flex-direction: row;
 }
 
 .panel {
     background-color: var(--panel-bg);
     display: flex;
     flex-direction: column;
-    padding: 1.5rem;
-    border-right: 1px solid var(--border-color);
+    padding: 1rem;
+    flex: 1;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.panel.hidden {
+    display: none;
+    flex: 0;
 }
 
 .panel-header {
@@ -398,14 +421,50 @@ body {
     font-weight: 600;
 }
 
+/* Web Preview Panel */
+.web-panel {
+    background-color: #f8fafc;
+    color: #1e293b;
+}
+
+.web-panel .panel-header {
+    color: #64748b;
+}
+
+.web-preview {
+    flex-grow: 1;
+    background-color: white;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    padding: 20px;
+    overflow: auto;
+    box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* Botão Ativo */
+.btn-icon.active {
+    background-color: rgba(56, 189, 248, 0.2);
+    color: var(--accent-color);
+}
+
 /* Responsividade */
+@media (max-width: 1200px) {
+    .editor-container {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .web-panel {
+        display: none;
+        /* Hide on small screens or we could stack it */
+    }
+}
+
 @media (max-width: 900px) {
     .editor-container {
-        grid-template-columns: 1fr;
-        overflow-y: auto;
+        flex-direction: column !important;
     }
 
     .editor-wrapper {
-        height: 400px;
+        height: 300px;
     }
 }

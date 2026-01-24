@@ -58,6 +58,27 @@
                     </button>
                 </div>
                 <div class="toolbar-right">
+                    <button id="layout-toggle" class="btn-icon" title="Alternar Orientação (H/V)">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2" />
+                            <path d="M12 3V21" stroke="currentColor" stroke-width="2" />
+                        </svg>
+                    </button>
+                    <button id="toggle-console" class="btn-icon" title="Mostrar/Ocultar Console">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M4 17L10 11L4 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                            <path d="M12 19H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                        </svg>
+                    </button>
+                    <button id="toggle-web" class="btn-icon" title="Mostrar/Ocultar Web">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
+                            <path d="M2.5 12h19M12 2.5a15 15 0 010 19M12 2.5a15 15 0 000 19" stroke="currentColor"
+                                stroke-width="2" />
+                        </svg>
+                    </button>
+                    <div class="divider"></div>
                     <span class="status-dot"></span>
                     <span class="panel-title">Editor</span>
                 </div>
@@ -83,6 +104,13 @@ EXIBIR(nome).</textarea>
             <div class="panel-header">Console</div>
             <div class="terminal">
                 <pre id="saida">// O resultado da compilação aparecerá aqui...</pre>
+            </div>
+        </section>
+
+        <section class="panel web-panel">
+            <div class="panel-header">Visualização Web</div>
+            <div id="web-preview" class="web-preview">
+                <!-- HTML gerado será injetado aqui -->
             </div>
         </section>
     </main>

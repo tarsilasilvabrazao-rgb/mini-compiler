@@ -9,6 +9,7 @@ import { TokenType } from "./lexer/ILexer";
 export interface CompilationResult {
     output: string[];
     errors: string[];
+    html?: string;
 }
 
 /**
@@ -52,6 +53,8 @@ export async function executeCode(
         // 3. Semântica e Execução
         const semantic = new SemanticAnalyzer("gui-input.sa", logCapture, inputCallback);
         await semantic.execute(ast);
+
+        return { output, errors, html: semantic.getWebOutput() };
 
     } catch (error: any) {
         errors.push(error.message);

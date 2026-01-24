@@ -210,7 +210,7 @@ class Parser {
     let node = this.factor();
     while (
       this.currentToken.type === TokenType.MULTIPLICACAO ||
-      this.currentToken.type === TokenType.DIVISAO
+      this.currentToken.type === TokenType.BARRA
     ) {
       const operatorToken = this.currentToken;
       const operator = operatorToken.type;
@@ -421,6 +421,108 @@ class Parser {
     return this.expr();
   }
 
+  /* ==================== WEB COMPONENTS ==================== */
+
+  private parseObjectLiteral(): ASTNode {
+    const obj: { [key: string]: ASTNode } = {};
+    while (this.currentToken.type !== TokenType.CHAVE_DIREITA && this.currentToken.type !== TokenType.EOF) {
+      const keyToken = this.currentToken;
+      const key = keyToken.value;
+      this.eat(TokenType.IDENTIFICADOR);
+      this.eat(TokenType.DOIS_PONTOS);
+      const value = this.expr();
+      obj[key] = value;
+      if (this.currentToken.type === TokenType.VIRGULA) {
+        this.eat(TokenType.VIRGULA);
+      }
+    }
+    return {
+      type: "ObjectLiteral",
+      properties: obj,
+    };
+  }
+
+  private parseTag(): ASTNode {
+    const startToken = this.currentToken;
+    this.eat(TokenType.MENOR_QUE);
+
+    const tagName = this.currentToken.value;
+    this.eat(TokenType.IDENTIFICADOR);
+
+    let properties: ASTNode | null = null;
+    // Se o próximo token for 'propriedades' ou se parecer com um atributo
+    if (this.currentToken.value === "propriedades") {
+      this.eat(TokenType.IDENTIFICADOR);
+      this.eat(TokenType.ATRIBUICAO);
+      this.eat(TokenType.CHAVE_ESQUERDA);
+      properties = this.parseObjectLiteral();
+      this.eat(TokenType.CHAVE_DIREITA);
+    }
+
+    // Tag auto-fechada: <tag />
+    if (this.currentToken.type === TokenType.BARRA) {
+      this.eat(TokenType.BARRA);
+      this.eat(TokenType.MAIOR_QUE);
+      return {
+        type: "WebTag",
+        tagName,
+        properties,
+        children: [],
+        linha: startToken.linha,
+        coluna: startToken.coluna,
+      };
+    }
+
+    this.eat(TokenType.MAIOR_QUE);
+
+    const children: ASTNode[] = [];
+    // Enquanto não encontrar </
+    while (
+      this.currentToken.type !== TokenType.EOF &&
+      !(this.currentToken.type === TokenType.MENOR_QUE && this.lexer.peekNextToken().type === TokenType.BARRA)
+    ) {
+      if (this.currentToken.type === TokenType.TEXTO) {
+        const textToken = this.currentToken;
+        children.push({
+          type: "StringLiteral",
+          value: textToken.value,
+          linha: textToken.linha,
+          coluna: textToken.coluna,
+        });
+        this.eat(TokenType.TEXTO);
+      } else if (this.currentToken.type === TokenType.CHAVE_ESQUERDA) {
+        this.eat(TokenType.CHAVE_ESQUERDA);
+        children.push(this.expr());
+        this.eat(TokenType.CHAVE_DIREITA);
+      } else {
+        children.push(this.statement());
+      }
+    }
+
+    this.eat(TokenType.MENOR_QUE);
+    this.eat(TokenType.BARRA);
+    const endTagName = this.currentToken.value;
+    if (endTagName !== tagName) {
+      throw new Error(
+        this.formatError(
+          "Erro Sintático",
+          `Tag de fechamento esperada </${tagName}>, encontrada </${endTagName}>`,
+        ),
+      );
+    }
+    this.eat(TokenType.IDENTIFICADOR);
+    this.eat(TokenType.MAIOR_QUE);
+
+    return {
+      type: "WebTag",
+      tagName,
+      properties,
+      children,
+      linha: startToken.linha,
+      coluna: startToken.coluna,
+    };
+  }
+
 
   // Comandos de controle de fluxo
   // Comando PARAR
@@ -437,17 +539,17 @@ class Parser {
   }
   // Comando CONTINUAR
   private parseContinueStatement(): ASTNode {
-  const token = this.currentToken;
-  this.eat(TokenType.CONTINUAR);
-  this.eat(TokenType.PONTO);
+    const token = this.currentToken;
+    this.eat(TokenType.CONTINUAR);
+    this.eat(TokenType.PONTO);
 
-  return {
-    type: "ContinueStatement",
-    linha: token.linha,
-    coluna: token.coluna,
-  };
-}
-    
+    return {
+      type: "ContinueStatement",
+      linha: token.linha,
+      coluna: token.coluna,
+    };
+  }
+
 
   private seStatement(): ASTNode {
     // Consome o 'SE'
@@ -717,6 +819,8 @@ class Parser {
     switch (this.currentToken.type) {
       case TokenType.VAR:
         return this.parseVariableDeclaration();
+      case TokenType.MENOR_QUE:
+        return this.parseTag();
       case TokenType.EXIBIR:
         return this.parsePrintStatement();
       case TokenType.SE:
@@ -749,7 +853,7 @@ class Parser {
 
       case TokenType.CONTINUAR:
         return this.parseContinueStatement();
-        
+
       case TokenType.RAIZ:
       case TokenType.EXPOENTE:
         return this.CalcStatement();

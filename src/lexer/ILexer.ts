@@ -15,6 +15,7 @@ enum TokenType {
   DIVISAO = "DIVISAO", // Operador de divisão '/'
   MULTIPLICACAO = "MULTIPLICACAO", // Operador de MULTIPLICACAO '*'
   MAIS = "MAIS", // Operador de adição '+'
+  BARRA = "BARRA", // Barra '/'
   IDENTIFICADOR = "IDENTIFICADOR", // Identificadores (nomes de variáveis)
   EOF = "EOF", // Fim do arquivo (End Of File)
 
@@ -40,7 +41,7 @@ enum TokenType {
   ENQUANTO = "ENQUANTO", // Palavra-chave 'ENQUANTO'
   FACA = "FACA", // Palavra-chave 'FACA'
   PARA = "PARA", // Palavra-chave 'PARA'
-  
+
 
   // Delimitadores
   PARENTESE_ESQUERDO = "PARENTE_ESQUERDO", // Parênteses esquerdo '('
@@ -83,7 +84,7 @@ enum TokenType {
   //POO
   PUBLICO = "PUBLICO",
   PRIVADO = "PRIVADO",
-  PROTEJIDO =  "PROTEJIDO",
+  PROTEJIDO = "PROTEJIDO",
 }
 
 
