@@ -67,8 +67,13 @@ ipcMain.handle('compile-code', async (event, sourceCode) => {
     });
   };
 
+  // Callback de output que será passado ao compilador
+  const outputCallback = (message) => {
+    event.sender.send('compilation-output', message);
+  };
+
   try {
-    const result = await compilerApi.executeCode(sourceCode, inputCallback);
+    const result = await compilerApi.executeCode(sourceCode, inputCallback, outputCallback);
     console.log(result)
     return result;
   } catch (error) {

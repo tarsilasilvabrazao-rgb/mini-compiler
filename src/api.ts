@@ -19,13 +19,19 @@ export interface CompilationResult {
  */
 export async function executeCode(
     sourceCode: string,
-    inputCallback?: (prompt: string) => Promise<string>
+    inputCallback?: (prompt: string) => Promise<string>,
+    outputCallback?: (message: string) => void
 ): Promise<CompilationResult> {
     const output: string[] = [];
     const errors: string[] = [];
 
     // Função auxiliar para capturar logs
-    const logCapture = (msg: string) => output.push(msg);
+    const logCapture = (msg: string) => {
+        output.push(msg);
+        if (outputCallback) {
+            outputCallback(msg);
+        }
+    };
 
     try {
         // 1. Lexer

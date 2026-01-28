@@ -209,6 +209,12 @@ window.onload = () => {
             console.log(codigo)
             saidaDiv.innerHTML = '<div class="log-info">Compilando...</div>';
 
+            // Cabeçalho de saída imediato
+            const header = document.createElement("div");
+            header.className = "log-header";
+            header.innerText = "RESULTADO:";
+            saidaDiv.appendChild(header);
+
             if (window.api && window.api.compile) {
                 const resultado = await window.api.compile(codigo);
                 // saidaDiv.innerHTML = ""; // Limpa anterior
@@ -251,21 +257,9 @@ window.onload = () => {
                     updateErrorOverlay(codigo);
                 }
 
-                // Renderiza SAÍDA
-                if (resultado.output && resultado.output.length > 0) {
-                    // Cabeçalho de saída
-                    const header = document.createElement("div");
-                    header.className = "log-header";
-                    header.innerText = "RESULTADO:";
-                    saidaDiv.appendChild(header);
-
-                    resultado.output.forEach(line => {
-                        const div = document.createElement("div");
-                        div.className = "log-entry log-success";
-                        div.textContent = `> ${line}`;
-                        saidaDiv.appendChild(div);
-                    });
-                }
+                // SAÍDA agora é processada via streaming (onOutput)
+                // Se o resultado final trouxer algo que não foi printado (teoricamente não deve ocorrer), 
+                // poderíamos lidar aqui, mas para simplicidade confiamos no stream.
 
                 if ((!resultado.errors || resultado.errors.length === 0) && (!resultado.output || resultado.output.length === 0)) {
                     saidaDiv.innerHTML += '<div class="log-info">✅ Executado sem saída visual.</div>';
@@ -361,6 +355,16 @@ window.onload = () => {
 
     // --- Lógica de Input no Console (Terminal-like) ---
 
+
+    if (window.api && window.api.onOutput) {
+        window.api.onOutput((line) => {
+            const div = document.createElement("div");
+            div.className = "log-entry log-success";
+            div.textContent = `> ${line}`;
+            saidaDiv.appendChild(div);
+            saidaDiv.scrollTop = saidaDiv.scrollHeight;
+        });
+    }
 
     if (window.api && window.api.onInputRequest) {
         window.api.onInputRequest((promptMsg) => {
