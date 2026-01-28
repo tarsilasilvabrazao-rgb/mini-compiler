@@ -73,16 +73,8 @@ export async function executeCode(
         return { output, errors, html: semantic.getWebOutput() };
 
     } catch (error: any) {
-        // Se o erro for formatado (contém ANSI), tentamos extrair o conteúdo limpo para o HTML
-        const cleanMessage = error.message.replace(/\x1b\[[0-9;]*m/g, "");
-        const errorHtml = `
-            <div style="background: #fee; border-left: 5px solid #f44; padding: 20px; font-family: sans-serif; color: #333;">
-                <h3 style="color: #d32; margin-top: 0;">⚠️ Erro de Execução Web</h3>
-                <pre style="white-space: pre-wrap; background: #fff; padding: 10px; border: 1px solid #ddd;">${cleanMessage}</pre>
-                <p style="font-size: 0.9em; color: #666;">Verifique as mensagens no console de logs para mais detalhes.</p>
-            </div>
-        `;
         errors.push(error.message);
-        return { output, errors, html: errorHtml };
     }
+
+    return { output, errors };
 }
